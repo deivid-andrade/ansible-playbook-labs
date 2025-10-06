@@ -1,0 +1,25 @@
+- name: Playbook to get country names by codes
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Check page
+      ansible.builtin.uri:
+        url: https://restcountries.com/v3.1/alpha?codes={{ item.value.code }} ## aqui eu chamo o valor do dicionario do arquivo countires.yml
+        method: GET
+        return_content: yes
+        status_code:
+          - 200
+      loop: "{{ country_code | dict2items }}" ## Aqui declaro o loop para percorrer o dicionario no arquivo countires.yml
+      register: rest_response
+
+    - name: print mensagem
+      debug:
+        msg: >-
+          {{
+            rest_response.results
+            | map(attribute='content')
+            | map('from_json')
+            | map('first')
+            | map(attribute='name.common')
+            | list
+          }}

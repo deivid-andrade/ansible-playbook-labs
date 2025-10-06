@@ -1,0 +1,17 @@
+country_code:
+  code_1:
+    code: "170"
+    name: "Indonesia"
+  
+  code_2: 
+    code: "no"
+    name: "Norway" 
+
+  code_3:
+    code: "est"
+    name: "Estonia"
+  
+  code_4:
+    code: "pe"
+    name: "Peru" 
+
