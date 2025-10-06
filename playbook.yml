@@ -12,9 +12,10 @@
       loop: "{{ country_code | dict2items }}" ## Aqui declaro o loop para percorrer o dicionario no arquivo countires.yml
       register: rest_response
 
-    - name: print mensagem
-      debug:
-        msg: >-
+    ## setar uma variavel intermediaria para extrair os nomes dos países
+    - name: Extrair nomes dos países
+      set_fact:
+        country_names: >-
           {{
             rest_response.results
             | map(attribute='content')
@@ -23,3 +24,42 @@
             | map(attribute='name.common')
             | list
           }}
+      when: rest_response is defined
+    
+    ## Utilizar a variavel intermediaria para fazer outra requisição
+    - name: get country details by name
+      ansible.builtin.uri:
+        url: "https://restcountries.com/v3.1/name/{{ item }}?fullText=true"
+        method: GET
+        return_content: yes
+        status_code:
+          - 200
+      loop: "{{ country_names }}"
+      register: country_details_response
+      when: country_names is defined
+    
+    ## printa a informacao completa da resposta acima
+    - name: debug country details
+      debug:
+        msg: "{{ country_details_response.results | map(attribute='content') | map('from_json') | list }}"
+
+  ## extrair a capital de cada país da resposta acima
+    - name: extrair capital
+      set_fact:
+        country_capitals: >-
+          {{
+            country_details_response.results
+            | map(attribute='content')
+            | map('from_json')
+            | map('first')
+            | map(attribute='capital')
+            | list
+            }}
+      when: country_details_response is defined
+    
+
+    ## printa a capital de cada país
+    - name: debug capitals
+      debug:
+        msg: "{{ country_capitals }}"
+      when: country_capitals is defined
